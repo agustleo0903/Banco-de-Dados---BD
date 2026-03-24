@@ -1,0 +1,52 @@
+
+A Teoria dos Conjuntos é uma forma de explicar como diferentes elementos se distribuem dentro de grupos, sejam ocupando grupos em comum ou não ocupando nenhum grupo. Dessa forma, ela tenta quantificar as possibilidades de agrupamento desses elementos. Sua aplicabilidade é praticamente infinita. Pode-se usar a teoria de conjuntos em bolhas sociais, levantamentos estatísticos de perfil, em catalogação de livros ou produtos em uma loja ou até mesmo lógica proposicional e por aí vai. Além, é claro, de ser a base para o modelo relacional de banco de dados. 
+
+O modelo relacional de bancos de dados, proposto por Codd (1970), deriva diretamente da teoria dos conjuntos, definindo uma relação como um subconjunto do produto cartesiano de domínios de atributos. Cada tabela em um banco de dados representa um conjunto de tuplas (linhas), e as operações sobre essas tabelas correspondem a operações de conjuntos:
+°União (∪): combina tuplas de duas relações, eliminando duplicatas. 
+
+°Interseção (∩): retorna apenas as tuplas comuns a ambas as relações. 
+
+°Diferença (-): obtém tuplas presentes em uma relação, mas não na outra. 
+
+°Produto Cartesiano (×): combina cada tupla de uma relação com todas as tuplas da outra, formando pares ordenados. 
+ 
+Essas operações são fundamentais para consultas em SQL, permitindo a construção de junções, filtros e combinações complexas de dados.
+
+A linguagem SQL (Structured Query Language) ,como já citada, também tem suas raízes na teoria de conjuntos, já que foi criada principalmente para a administração de sistemas desse tipo.
+
+Exemplos Práticos
+
+União de Conjuntos:
+-- Tabela A contém clientes de São Paulo
+
+SELECT nome FROM clientes_sp
+
+UNION
+
+-- Tabela B contém clientes do Rio de Janeiro
+
+SELECT nome FROM clientes_rj;
+
+Resultado: Lista de clientes de São Paulo e Rio de Janeiro sem duplicatas.
+Interseção de Conjuntos:
+
+-- Clientes que compraram produtos em 2025 e 2026
+SELECT cliente_id FROM compras_2025
+
+INTERSECT
+
+SELECT cliente_id FROM compras_2026;
+
+Resultado: Identifica clientes que compraram em ambos os anos.
+Diferença de Conjuntos:
+
+-- Clientes de 2025 que não compraram em 2026
+SELECT cliente_id FROM compras_2025
+
+EXCEPT
+
+SELECT cliente_id FROM compras_2026;
+
+Resultado: Clientes ativos em 2025 mas não em 2026.
+
+
