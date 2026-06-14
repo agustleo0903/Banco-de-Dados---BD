@@ -1,0 +1,32 @@
+Dicionário de Dados – Sistema MyPocket
+Tabela: carteiras
+Nome do Campo	Tipo de Dado	Restrições	Descrição
+id	INT	PRIMARY KEY, NOT NULL	Identificador único da carteira.
+id_usuario	INT	FOREIGN KEY, UNIQUE, NOT NULL	Identifica o usuário proprietário da carteira. A restrição UNIQUE garante que um usuário possua apenas uma carteira.
+saldo	DECIMAL(15,2)	NOT NULL, DEFAULT 0, CHECK (saldo >= 0)	Armazena o saldo disponível da carteira. Não pode assumir valores negativos.
+
+Tabela: transacoes
+Nome do Campo	Tipo de Dado	Restrições	Descrição
+id	INT	PRIMARY KEY, NOT NULL	Identificador único da transação.
+descricao	VARCHAR(255)	NOT NULL	Descrição da movimentação financeira realizada.
+data_transacao	DATE	NOT NULL	Data em que a transação foi registrada.
+valor	DECIMAL(15,2)	NOT NULL, CHECK (valor > 0)	Valor monetário da transação. Deve ser sempre positivo.
+tipo	ENUM('RECEITA','DESPESA')	NOT NULL	Define se a movimentação representa uma entrada (receita) ou uma saída (despesa).
+id_carteira	INT	FOREIGN KEY, NOT NULL	Identifica a carteira à qual a transação pertence.
+
+Justificativa dos Tipos Monetários
+Os campos saldo e valor utilizam o tipo DECIMAL(15,2). Tipos de ponto flutuante como FLOAT e DOUBLE não são adequados para armazenar valores financeiros, pois podem gerar erros de arredondamento durante cálculos matemáticos. O tipo DECIMAL garante precisão exata nas operações monetárias, preservando os centavos e evitando inconsistências financeiras.
+
+Restrições de Integridade Relacionadas às Regras de Negócio
+RN01 – Controle de Endividamento
+O saldo da carteira não pode assumir valores negativos. Além disso, o sistema deve impedir o registro de despesas cujo valor seja superior ao saldo disponível.
+RN02 – Classificação Rígida de Fluxo
+Toda transação deve ser obrigatoriamente classificada como RECEITA ou DESPESA, por meio do campo tipo.
+RN03 – Histórico Inalterável
+Transações não podem ser alteradas nem excluídas após o registro. Caso seja necessário corrigir um lançamento incorreto, deverá ser criada uma nova transação de estorno, preservando o histórico para fins de auditoria.
+
+Testes de Homologação
+Teste da Unicidade Financeira: Atendido pela restrição UNIQUE aplicada ao campo id_usuario da tabela carteiras.
+Teste da Imutabilidade Histórica: Atendido pela proibição de operações UPDATE e DELETE sobre registros de transações.
+Teste da Precisão Centesimal: Atendido pela utilização do tipo DECIMAL(15,2) para os campos monetários.
+Teste da Blindagem de Fluxo: Atendido pela restrição ENUM('RECEITA','DESPESA') no campo tipo da tabela transacoes.
