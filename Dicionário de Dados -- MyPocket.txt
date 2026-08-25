@@ -1,32 +1,243 @@
-Dicion�rio de Dados � Sistema MyPocket
+Dicionário de Dados – Sistema MyPocket
+Tabela: usuarios
+Nome do Campo
+Tipo de Dado
+Restrições
+Descrição
+id INT
+PRIMARY KEY, NOT NULL
+Identificador único do usuário.
+nome
+VARCHAR(100)
+NOT NULL
+Nome do usuário cadastrado no sistema.
+email
+VARCHAR(255)
+UNIQUE, NOT NULL
+E-mail utilizado para identificação e acesso do usuário ao sistema.
 Tabela: carteiras
-Nome do Campo	Tipo de Dado	Restri��es	Descri��o
-id	INT	PRIMARY KEY, NOT NULL	Identificador �nico da carteira.
-id_usuario	INT	FOREIGN KEY, UNIQUE, NOT NULL	Identifica o usu�rio propriet�rio da carteira. A restri��o UNIQUE garante que um usu�rio possua apenas uma carteira.
-saldo	DECIMAL(15,2)	NOT NULL, DEFAULT 0, CHECK (saldo >= 0)	Armazena o saldo dispon�vel da carteira. N�o pode assumir valores negativos.
+Nome do Campo
+Tipo de Dado
+Restrições
+Descrição
+id
+INT
+PRIMARY KEY, NOT NULL
+Identificador único da carteira.
+id_usuario
+INT
+FOREIGN KEY, NOT NULL
+Identifica o usuário proprietário da carteira. Um usuário pode possuir mais de uma carteira.
+nome
+VARCHAR(100)
+NOT NULL
+Nome utilizado para identificar a carteira, como "Conta principal" ou "Poupança".
+tipo
+ENUM('CONTA_CORRENTE','POUPANCA')
+NOT NULL
+Define o tipo da carteira financeira, permitindo diferenciar uma conta corrente de uma poupança.
+saldo
+DECIMAL(15,2)
+NOT NULL, DEFAULT 0, CHECK (saldo >= 0)
+Armazena o saldo disponível da carteira. Não pode assumir valores negativos.
+Regra relacionada à carteira
+O relacionamento entre usuarios e carteiras permite que um mesmo usuário possua diferentes carteiras.
+Exemplo:
+Usuário
+ ├── Conta principal → CONTA_CORRENTE
+ └── Poupança        → POUPANCA
+A poupança não é uma entidade separada. Ela é representada por uma carteira cujo atributo tipo possui o valor POUPANCA.
+Tabela: categorias
+Nome do Campo
+Tipo de Dado
+Restrições
+Descrição
+id
+INT
+PRIMARY KEY, NOT NULL
+Identificador único da categoria.
+nome
+VARCHAR(100)
+NOT NULL
+Nome da categoria utilizada para organizar as movimentações financeiras.
+tipo
+ENUM('RECEITA','DESPESA')
+NOT NULL
+Define se a categoria será utilizada para classificar receitas ou despesas.
+Exemplos
+RECEITA
+- Salário
+- Bolsa
+- Outros recebimentos
 
+DESPESA
+- Alimentação
+- Transporte
+- Lazer
+- Moradia
+As transferências não precisam de categoria, pois representam movimentações entre carteiras do próprio usuário.
 Tabela: transacoes
-Nome do Campo	Tipo de Dado	Restri��es	Descri��o
-id	INT	PRIMARY KEY, NOT NULL	Identificador �nico da transa��o.
-descricao	VARCHAR(255)	NOT NULL	Descri��o da movimenta��o financeira realizada.
-data_transacao	DATE	NOT NULL	Data em que a transa��o foi registrada.
-valor	DECIMAL(15,2)	NOT NULL, CHECK (valor > 0)	Valor monet�rio da transa��o. Deve ser sempre positivo.
-tipo	ENUM('RECEITA','DESPESA')	NOT NULL	Define se a movimenta��o representa uma entrada (receita) ou uma sa�da (despesa).
-id_carteira	INT	FOREIGN KEY, NOT NULL	Identifica a carteira � qual a transa��o pertence.
-
-Justificativa dos Tipos Monet�rios
-Os campos saldo e valor utilizam o tipo DECIMAL(15,2). Tipos de ponto flutuante como FLOAT e DOUBLE n�o s�o adequados para armazenar valores financeiros, pois podem gerar erros de arredondamento durante c�lculos matem�ticos. O tipo DECIMAL garante precis�o exata nas opera��es monet�rias, preservando os centavos e evitando inconsist�ncias financeiras.
-
-Restri��es de Integridade Relacionadas �s Regras de Neg�cio
-RN01 � Controle de Endividamento
-O saldo da carteira n�o pode assumir valores negativos. Al�m disso, o sistema deve impedir o registro de despesas cujo valor seja superior ao saldo dispon�vel.
-RN02 � Classifica��o R�gida de Fluxo
-Toda transa��o deve ser obrigatoriamente classificada como RECEITA ou DESPESA, por meio do campo tipo.
-RN03 � Hist�rico Inalter�vel
-Transa��es n�o podem ser alteradas nem exclu�das ap�s o registro. Caso seja necess�rio corrigir um lan�amento incorreto, dever� ser criada uma nova transa��o de estorno, preservando o hist�rico para fins de auditoria.
-
-Testes de Homologa��o
-Teste da Unicidade Financeira: Atendido pela restri��o UNIQUE aplicada ao campo id_usuario da tabela carteiras.
-Teste da Imutabilidade Hist�rica: Atendido pela proibi��o de opera��es UPDATE e DELETE sobre registros de transa��es.
-Teste da Precis�o Centesimal: Atendido pela utiliza��o do tipo DECIMAL(15,2) para os campos monet�rios.
-Teste da Blindagem de Fluxo: Atendido pela restri��o ENUM('RECEITA','DESPESA') no campo tipo da tabela transacoes.
+Nome do Campo
+Tipo de Dado
+Restrições
+Descrição
+id
+INT
+PRIMARY KEY, NOT NULL
+Identificador único da transação.
+descricao
+VARCHAR(255)
+NOT NULL
+Descrição da movimentação financeira realizada.
+data_transacao
+DATE
+NOT NULL
+Data em que a transação foi registrada.
+valor
+DECIMAL(15,2)
+NOT NULL, CHECK (valor > 0)
+Valor monetário da transação. Deve ser sempre positivo.
+tipo
+ENUM('RECEITA','DESPESA','TRANSFERENCIA')
+NOT NULL
+Define se a movimentação representa uma entrada, uma saída ou uma transferência entre carteiras.
+id_carteira
+INT
+FOREIGN KEY, NOT NULL
+Identifica a carteira associada à transação. Em uma transferência, representa a carteira de origem.
+id_categoria
+INT
+FOREIGN KEY, NULL
+Identifica a categoria associada à transação. É utilizado para receitas e despesas e pode ser nulo em transferências.
+id_carteira_destino
+INT
+FOREIGN KEY, NULL
+Identifica a carteira que receberá o valor quando a transação for do tipo TRANSFERENCIA. Deve ser preenchido apenas em transferências.
+Funcionamento de TRANSFERENCIA
+A transferência foi adicionada como um terceiro tipo de transação:
+TRANSAÇÃO
+├── RECEITA
+├── DESPESA
+└── TRANSFERENCIA
+Uma transferência possui:
+id_carteira          → carteira de origem
+id_carteira_destino  → carteira de destino
+valor                → valor transferido
+Exemplo:
+Conta corrente
+      │
+      │ R$ 200
+      ▼
+   Poupança
+Na tabela:
+tipo = TRANSFERENCIA
+id_carteira = conta corrente
+id_carteira_destino = poupança
+valor = 200.00
+id_categoria = NULL
+A transferência não é considerada uma despesa, pois o dinheiro continua pertencendo ao usuário e apenas mudou de carteira.
+Tabela: metas
+Nome do Campo
+Tipo de Dado
+Restrições
+Descrição
+id
+INT
+PRIMARY KEY, NOT NULL
+Identificador único da meta financeira.
+id_carteira
+INT
+FOREIGN KEY, NOT NULL
+Identifica a carteira associada à meta financeira.
+nome
+VARCHAR(100)
+NOT NULL
+Nome da meta financeira.
+valor_objetivo
+DECIMAL(15,2)
+NOT NULL, CHECK (valor_objetivo > 0)
+Valor total que se deseja alcançar para atingir a meta.
+valor_atual
+DECIMAL(15,2)
+NOT NULL, DEFAULT 0, CHECK (valor_atual >= 0)
+Valor já acumulado para atingir a meta.
+data_limite
+DATE
+NULL
+Data prevista para alcançar a meta financeira.
+Exemplo
+Meta: Comprar computador
+Valor objetivo: R$ 4.000,00
+Valor atual: R$ 1.500,00
+Data limite: 20/12/2026
+A meta pode estar associada a uma carteira de poupança, por exemplo.
+Justificativa dos Tipos Monetários
+Os campos saldo, valor, valor_objetivo e valor_atual utilizam o tipo DECIMAL(15,2).
+Tipos de ponto flutuante, como FLOAT e DOUBLE, não são adequados para representar valores financeiros devido à possibilidade de erros de arredondamento durante operações matemáticas.
+O tipo DECIMAL permite armazenar valores monetários com precisão exata, preservando os centavos e evitando inconsistências nos cálculos financeiros.
+Restrições de Integridade Relacionadas às Regras de Negócio
+RN01 – Controle de Endividamento
+O saldo de uma carteira não pode assumir valores negativos.
+O sistema também deve impedir o registro de uma despesa cujo valor seja superior ao saldo disponível da carteira.
+Para transferências, a carteira de origem também deve possuir saldo suficiente para realizar a movimentação.
+A comparação entre o valor da transação e o saldo da carteira não é garantida apenas pelo CHECK; ela deverá ser implementada por regra de negócio, trigger ou lógica da aplicação.
+RN02 – Classificação de Fluxo Financeiro
+Toda transação deve ser obrigatoriamente classificada como:
+RECEITA
+DESPESA
+TRANSFERENCIA
+Essa classificação é realizada pelo campo tipo.
+RN03 – Histórico Inalterável
+Transações registradas não podem ser alteradas ou excluídas após sua confirmação.
+Caso seja necessário corrigir um lançamento incorreto, deverá ser realizada uma nova movimentação de correção/estorno, preservando o histórico financeiro.
+RN04 – Múltiplas Carteiras por Usuário
+Um usuário pode possuir mais de uma carteira financeira.
+Isso permite situações como:
+Usuário
+ ├── Conta corrente
+ └── Poupança
+Dessa forma, a restrição UNIQUE não deve ser aplicada ao campo id_usuario da tabela carteiras.
+RN05 – Integridade das Transferências
+Uma transferência deve possuir:
+uma carteira de origem;
+uma carteira de destino;
+um valor positivo.
+A carteira de origem não pode ser a mesma carteira de destino.
+id_carteira <> id_carteira_destino
+Transferências não devem ser contabilizadas como receitas ou despesas.
+RN06 – Classificação por Categoria
+Receitas e despesas podem ser classificadas por categorias para facilitar a organização e análise das movimentações financeiras.
+Uma transferência não precisa possuir categoria.
+RN07 – Controle de Metas
+Toda meta deve estar associada a uma carteira e possuir um valor objetivo maior que zero.
+O valor atual acumulado não pode ser negativo e deve representar o progresso financeiro em relação ao objetivo estabelecido.
+Testes de Homologação
+Teste
+Regra verificada
+Resultado esperado
+Teste de Múltiplas Carteiras
+RN04
+Um mesmo usuário pode possuir uma conta corrente e uma poupança.
+Teste da Precisão Centesimal
+Valores monetários
+Valores são armazenados com duas casas decimais utilizando DECIMAL(15,2).
+Teste da Classificação de Fluxo
+RN02
+Apenas RECEITA, DESPESA ou TRANSFERENCIA são aceitos.
+Teste da Transferência
+RN05
+A transferência possui carteira de origem e destino diferentes.
+Teste da Categorização
+RN06
+Receitas e despesas podem ser associadas a categorias.
+Teste da Imutabilidade Histórica
+RN03
+Transações confirmadas não podem ser alteradas ou excluídas.
+Teste do Saldo
+RN01
+O saldo da carteira não pode ficar negativo.
+Teste da Meta Financeira
+RN07
+A meta possui valor objetivo positivo e está associada a uma carteira.
+Teste de Carteira Poupança
+RN04
